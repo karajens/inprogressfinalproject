@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .cell.taken {
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 1.5rem;
+        }
+
+        .restart {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="board" id="board"></div>
+        <div class="status" id="status">Player X's turn</div>
+        <button class="restart" id="restart">Restart</button>
+    </div>
+
+    <script>
+        const board = document.getElementById('board');
+        const statusDisplay = document.getElementById('status');
+        const restartButton = document.getElementById('restart');
+
+        let currentPlayer = 'X';
+        let gameActive = true;
+        const gameState = Array(9).fill('');
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        function checkWinner() {
+            for (const condition of winningConditions) {
+                const [a, b, c] = condition;
+                if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+                    return gameState[a];
+                }
+            }
+            return gameState.includes('') ? null : 'Draw';
+        }
+
+        function computerMove() {
+            const availableCells = gameState.map((value, index) => value === '' ? index : null).filter(index => index !== null);
+            if (availableCells.length === 0) return;
+            const randomIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
+            gameState[randomIndex] = 'O';
+            const cell = document.querySelector(`.cell[data-index='${randomIndex}']`);
+            cell.textContent = 'O';
+            cell.classList.add('taken');
+
+            const winner = checkWinner();
+
+            if (winner) {
+                gameActive = false;
+                statusDisplay.textContent = winner === 'Draw' ? "It's a Draw!" : `Player ${winner} Wins!`;
+                return;
+            }
+
+            currentPlayer = 'X';
+            statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        function handleCellClick(e) {
+            const cell = e.target;
+            const cellIndex = parseInt(cell.getAttribute('data-index'));
+
+            if (!gameActive || gameState[cellIndex] !== '') return;
+
+            gameState[cellIndex] = currentPlayer;
+            cell.textContent = currentPlayer;
+            cell.classList.add('taken');
+
+            const winner = checkWinner();
+
+            if (winner) {
+                gameActive = false;
+                statusDisplay.textContent = winner === 'Draw' ? "It's a Draw!" : `Player ${winner} Wins!`;
+                return;
+            }
+
+            currentPlayer = 'O';
+            statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
+            setTimeout(computerMove, 500); // Let the computer play after a delay
+        }
+
+        function restartGame() {
+            gameActive = true;
+            currentPlayer = 'X';
+            gameState.fill('');
+            statusDisplay.textContent = "Player X's turn";
+            board.innerHTML = '';
+            createBoard();
+        }
+
+        function createBoard() {
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.setAttribute('data-index', i);
+                cell.addEventListener('click', handleCellClick);
+                board.appendChild(cell);
+            }
+        }
+
+        restartButton.addEventListener('click', restartGame);
+
+        createBoard();
+    </script>
+</body>
+</html>
